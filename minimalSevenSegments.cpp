@@ -1,17 +1,5 @@
+#include "minimalSevenSegments.h"
 
-// #define DEBUG_ARDUINO 1
-
-#if DEBUG_ARDUINO
-  #define DEBUG_INIT() Serial.begin(9600)
-  #define DEBUG(_val_) Serial.print((_val_))
-  #define DEBUGLN(_val_) Serial.println((_val_))
-#else
-  #define DEBUG_INIT()
-  #define DEBUG(_val_)
-  #define DEBUGLN(_val_)
-#endif
-
-#define NUMBER_SEGMENTS 8
 #define A_SIZE(_a_) ( sizeof( (_a_) ) / sizeof( _a_[0] ))
 
 static const byte digitCodeMap[] = {
@@ -55,19 +43,7 @@ static const byte digitCodeMap[] = {
   B01011011  // 90  'Z'  Same as '2'
 };
 
-class SingleSevenSegment {
-
-    byte _pins[NUMBER_SEGMENTS];
-    byte _on;
-    byte _off;
-    const byte _alpha_offset = 10;
-
-    inline byte getVoltage(byte bn, byte i)
-    {
-      return (bn & (1 << i) ? _on : _off);
-    }
-
-    void clean()
+    void SingleSevenSegment::clean()
     {
       for (byte i = 0; i < A_SIZE(_pins); ++i) {
         digitalWrite( _pins[i], _off );
@@ -75,10 +51,7 @@ class SingleSevenSegment {
     }
 
 
-  public:
-    SingleSevenSegment() {}
-
-    void begin(
+    void SingleSevenSegment::begin(
       byte pins[],
       byte on = HIGH,
       byte off = LOW
@@ -93,7 +66,7 @@ class SingleSevenSegment {
       clean();
     }
 
-    void setSymbol(char c) {
+    void SingleSevenSegment::setSymbol(char c) {
       if ( c == ' ' ) {
         clean();
         return;
@@ -111,11 +84,10 @@ class SingleSevenSegment {
       clean();
     }
 
-    void setSymbol(byte n)
+    void SingleSevenSegment::setSymbol(byte n)
     {
 
       if ( n > A_SIZE( digitCodeMap ) ) { return; }
-      DEBUG("Number To display: "); DEBUGLN(n);
       byte bn = digitCodeMap[n];
       for ( byte i = 0; i < A_SIZE(_pins); ++i ) {
         digitalWrite( _pins[i], getVoltage(bn, i) );
@@ -123,54 +95,7 @@ class SingleSevenSegment {
 
     }
 
-    void setSymbol(int n) {
+    void SingleSevenSegment::setSymbol(int n) {
       setSymbol( (byte)n );
     }
 
-};
-
-/* ==================================================================== */
-
-SingleSevenSegment sss;
-byte pins[] = {6, 5, 2, 3, 4, 7, 8, 9};
-
-/* ==================================================================== */
-
-void _delay(unsigned long ms)
-{
-  unsigned long firstMillis = millis();
-  while ( millis() - firstMillis < ms ) {}
-}
-
-
-void cycleSegments(int delayTime) {
-  _delay(delayTime * 3);
-  sss.setSymbol(' ');
-
-  byte max_num = 16;
-  for (byte i = 0; i <= max_num; ++i) {
-    _delay(delayTime * 3);
-    sss.setSymbol(i);
-  }
-  char c = 'A';
-  sss.setSymbol(' ');
-  _delay(delayTime * 6);
-  for ( ; c <= 'z'; ++c ) {
-    sss.setSymbol(c);
-    _delay(delayTime);
-  }
-}
-
-/* ==================================================================== */
-
-void setup() {
-  // put your setup code here, to run once:
-  sss.begin(pins);
-  DEBUG_INIT();
-
-}
-
-void loop() {
-  // put your main code here, to run repeatedly:
-  cycleSegments(300);
-}
